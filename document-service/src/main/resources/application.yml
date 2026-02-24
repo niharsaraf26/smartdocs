@@ -1,0 +1,88 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: DOCUMENT-SERVICE
+
+  # Database Configuration (Supabase)
+  datasource:
+    url: ${SUPABASE_DB_URL}
+    username: ${SUPABASE_DB_USERNAME}
+    password: ${SUPABASE_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update # Creates/updates tables automatically
+    show-sql: true # Shows SQL queries (for learning)
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  # File Upload Configuration
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 20MB
+
+  # RabbitMQ Configuration
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    # Connection timeout and retry settings
+#    connection-timeout: 30000
+#    template:
+#      retry:
+#        enabled: true
+#        initial-interval: 1000
+#        max-attempts: 3
+#    listener:
+#      simple:
+#        retry:
+#          enabled: true
+#          initial-interval: 1000
+#          max-attempts: 3
+
+# Auto-configuration exclusions for optional services
+#  autoconfigure:
+#    exclude:
+#      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+
+supabase:
+  url: ${SUPABASE_URL}
+  service-key: ${SUPABASE_SERVICE_KEY}
+  bucket: smartdocs-documents
+
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  expiration: 86400000
+
+# Eureka Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+# Logging
+logging:
+  level:
+    com.smartdocs: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

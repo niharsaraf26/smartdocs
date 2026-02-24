@@ -1,0 +1,74 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: API-GATEWAY
+
+  # Spring Cloud Gateway Configuration
+  cloud:
+    gateway:
+      # Enable discovery-based routing
+      discovery:
+        locator:
+          enabled: true # Auto-discover services from Eureka
+          lower-case-service-id: true # Convert service names to lowercase URLs
+
+      # Global filters applied to all routes
+      default-filters:
+        - AddResponseHeader=X-SmartDocs-Gateway, v1.0
+        - AddResponseHeader=X-Response-Time, Gateway-Processed
+        - JwtAuthenticationFilter
+
+      # CORS configuration for frontend integration
+      globalcors:
+        corsConfigurations:
+          "[/**]":
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://localhost:3001"
+              - "https://smartdocs.com"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - Authorization
+              - Content-Type
+              - X-Requested-With
+            allowCredentials: true
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true # Fetch service registry from Eureka
+    register-with-eureka: true # Register this gateway with Eureka
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10 # Heartbeat frequency
+    lease-expiration-duration-in-seconds: 30 # When Eureka considers service down
+
+# Logging Configuration
+logging:
+  level:
+    com.smartdocs: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.loadbalancer: DEBUG
+#  pattern:
+#    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Management and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true # Enable gateway actuator endpoints

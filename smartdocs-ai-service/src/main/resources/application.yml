@@ -1,0 +1,126 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: SMARTDOCS-AI-SERVICE
+
+  # Database Configuration
+  datasource:
+    url: ${SUPABASE_DB_URL}
+    username: ${SUPABASE_DB_USERNAME}
+    password: ${SUPABASE_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # RabbitMQ Configuration (receives from document-service)
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+# ═══════════════════════════════════════════════════════
+# Gemini AI Configuration (Extraction + Vision)
+# ═══════════════════════════════════════════════════════
+gemini:
+  api:
+    key: ${GEMINI_API_KEY}
+    base-url: https://generativelanguage.googleapis.com/v1beta
+    model: ${GEMINI_MODEL:gemini-2.5-flash}
+    temperature: 0.1
+    max-tokens: 4000
+
+# ═══════════════════════════════════════════════════════
+# Google Embeddings Configuration
+# ═══════════════════════════════════════════════════════
+google:
+  embeddings:
+    api-key: ${GEMINI_API_KEY}
+    model: gemini-embedding-001
+    base-url: https://generativelanguage.googleapis.com/v1beta
+
+  genai:
+    api-key: ${GEMINI_API_KEY}
+    base-url: https://generativelanguage.googleapis.com/v1beta
+    model: ${GEMINI_MODEL:gemini-2.0-flash-lite}
+    temperature: 0.1
+    max-tokens: 4000
+
+# ═══════════════════════════════════════════════════════
+# LLM Provider Selection (Strategy + Factory Pattern)
+# ═══════════════════════════════════════════════════════
+llm:
+  text-generation:
+    provider: ${LLM_TEXT_GEN_PROVIDER:groq}
+  embedding:
+    provider: ${LLM_EMBEDDING_PROVIDER:google}
+
+# Groq Configuration (Free tier: Llama 3.3 70B)
+groq:
+  api-key: ${GROQ_API_KEY}
+  model: ${GROQ_MODEL:llama-3.3-70b-versatile}
+  routing-model: ${GROQ_ROUTING_MODEL:llama-3.1-8b-instant}
+  base-url: https://api.groq.com/openai/v1
+
+# Q&A Pipeline Configuration
+qna:
+  context:
+    max-chars: ${QNA_CONTEXT_MAX_CHARS:10000}
+
+# ═══════════════════════════════════════════════════════
+# Pinecone Vector Database
+# ═══════════════════════════════════════════════════════
+pinecone:
+  api-key: ${PINECONE_API_KEY:your-pinecone-api-key}
+  index-name: smartdocs-documents
+  base-url: ${PINECONE_BASE_URL:https://smartdocs-documents-xxxxxxx.svc.us-east-1.pinecone.io}
+  namespace:
+
+# ═══════════════════════════════════════════════════════
+# Supabase Storage (for downloading uploaded files)
+# ═══════════════════════════════════════════════════════
+supabase:
+  url: ${SUPABASE_URL}
+  service-key: ${SUPABASE_SERVICE_KEY}
+  bucket: smartdocs-documents
+
+# JWT (for securing API endpoints)
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  expiration: 86400000
+
+# Eureka Service Discovery
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+# Management & Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.smartdocs.embedding: DEBUG
+    org.springframework.amqp: INFO

@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # ═══════════════════════════════════════════════════════
+  # Infrastructure
+  # ═══════════════════════════════════════════════════════
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: smartdocs-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ═══════════════════════════════════════════════════════
+  # Core Services
+  # ═══════════════════════════════════════════════════════
+
+  service-registry:
+    build:
+      context: .
+      dockerfile: service-registry/Dockerfile
+    container_name: smartdocs-service-registry
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: smartdocs-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-registry:8761/eureka/
+    depends_on:
+      service-registry:
+        condition: service_healthy
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: smartdocs-auth-service
+    ports:
+      - "8081:8081"
+    env_file:
+      - .env
+    environment:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-registry:8761/eureka/
+    depends_on:
+      service-registry:
+        condition: service_healthy
+
+  document-service:
+    build:
+      context: .
+      dockerfile: document-service/Dockerfile
+    container_name: smartdocs-document-service
+    ports:
+      - "8082:8082"
+    env_file:
+      - .env
+    environment:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  smartdocs-ai-service:
+    build:
+      context: .
+      dockerfile: smartdocs-ai-service/Dockerfile
+    container_name: smartdocs-ai-service
+    ports:
+      - "8084:8084"
+    env_file:
+      - .env
+    environment:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-registry:8761/eureka/
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      service-registry:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy

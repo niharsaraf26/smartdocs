@@ -1,0 +1,36 @@
+server:
+  port: 8761  # Standard Eureka port
+
+spring:
+  application:
+    name: service-registry
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    # Don't register this server as a client (it's the registry itself!)
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+  server:
+    # Disable self-preservation in development (removes services faster when they go down)
+    enable-self-preservation: false
+    # How often to check for expired services (in ms)
+    eviction-interval-timer-in-ms: 2000
+
+logging:
+  level:
+    com.smartdocs: INFO
+    com.netflix.eureka: OFF    # Reduce Netflix internal logs
+    com.netflix.discovery: OFF
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

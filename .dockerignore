@@ -1,0 +1,16 @@
+target/
+.git
+.idea
+.vscode
+*.iml
+*.iws
+*.ipr
+.env
+build_log.txt
+erl_crash.dump
+PROJECT_CONTEXT.md
+RESUME_IMPACT_ANALYSIS.md
+implementationPlan.md
+plan-smartdocsRoadmapAndHld.prompt.md
+remove_emojis.py
+.DS_Store
