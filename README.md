@@ -563,9 +563,7 @@ This would **reduce token usage by 80%+** for queries like _"Is my name same on 
 - **Document Expiry Alerts** — Notify users when identity documents (passport, DL) are approaching expiry using `expiry_date` metadata
 - **Frontend Dashboard** — React/Next.js UI with document cards, metadata tables, and spending charts powered by SQL metadata
 - **Batch Upload** — Upload and process multiple documents in a single request
-- **Confidence-Based Routing** — If Gemini's extraction confidence is low, auto-fallback to SEMANTIC instead of FACTUAL
-- **Caching Layer** — Redis cache for frequently asked FACTUAL queries to avoid repeated SQL hits
-- **Document Versioning** — Track re-uploads of the same document and diff extracted fields
+- **LLM Zero-Retention Policy** — All document processing utilizes enterprise API endpoints (Google Gemini/Groq) with explicit zero-data-retention agreements, ensuring sensitive identity information (Aadhaar, PAN, etc.) is **never** used to train foundation models or retained by third-party LLM providers.
 
 ---
 
