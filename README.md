@@ -136,7 +136,7 @@ flowchart TD
 
 ## Hybrid Query Pipeline
 
-When a user asks a question, a **lightweight router LLM** (Groq Llama 3.1 8B Instant, ~100ms) classifies it and routes to the optimal path:
+When a user asks a question, a **lightweight router LLM** (Groq Llama 3.1 8B Instant) classifies it and routes to the optimal path:
 
 ```mermaid
 flowchart TD
@@ -146,7 +146,7 @@ flowchart TD
     R -->|"'Total spend on food?'"| C["CROSS_DOCUMENT"]
 
     F --> F1["SQL: SELECT field_value\nFROM document_metadata\nWHERE field_name = 'id_number'"]
-    F1 --> F2["Direct answer (no LLM) ⚡"]
+    F1 --> F2["Direct answer"]
     F1 -.->|no match| S
 
     S --> S1["Generate embedding → Pinecone search"]
@@ -161,11 +161,11 @@ flowchart TD
 
 ### Route Comparison
 
-| Route              | When Used                            | Data Source                   | LLM Cost      | Speed |
-| ------------------ | ------------------------------------ | ----------------------------- | ------------- | ----- |
-| **FACTUAL**        | Single-value lookups (name, ID, DOB) | `document_metadata` SQL table | Free (no LLM) | ~10ms |
-| **SEMANTIC**       | Understanding document content       | Pinecone vector search        | 1 LLM call    | ~2-3s |
-| **CROSS_DOCUMENT** | Aggregation, comparison across docs  | Full `extracted_text` from DB | 1 LLM call    | ~3-5s |
+| Route              | When Used                            | Data Source                   | LLM Cost      | 
+| ------------------ | ------------------------------------ | ----------------------------- | ------------- | 
+| **FACTUAL**        | Single-value lookups (name, ID, DOB) | `document_metadata` SQL table | Free (no LLM) | 
+| **SEMANTIC**       | Understanding document content       | Pinecone vector search        | 1 LLM call    | 
+| **CROSS_DOCUMENT** | Aggregation, comparison across docs  | Full `extracted_text` from DB | 1 LLM call    | 
 
 ### DocumentType Enum
 
@@ -433,7 +433,7 @@ curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","password":"pass123"}'
 
-# Upload document (use token from login response)
+# Upload document
 curl -X POST http://localhost:8080/api/documents \
   -H "Authorization: Bearer <your-jwt-token>" \
   -F "file=@document.pdf"
@@ -442,9 +442,6 @@ curl -X POST http://localhost:8080/api/documents \
 curl "http://localhost:8080/api/ai/answers?query=what+is+my+PAN+number" \
   -H "Authorization: Bearer <your-jwt-token>"
 
-# Semantic search
-curl "http://localhost:8080/api/ai/search?query=marksheet+results&maxResults=3" \
-  -H "Authorization: Bearer <your-jwt-token>"
 ```
 
 ---
@@ -535,7 +532,6 @@ smartdocs-project/
 | **3-Route Hybrid RAG**          | FACTUAL (free/instant), SEMANTIC (deep understanding), CROSS_DOCUMENT (aggregation) — right tool for each job   |
 | **Groq for routing**            | Cheap, fast classifier (~100ms, `llama-3.1-8b-instant`) avoids using expensive Gemini for simple classification |
 | **EAV over fixed columns**      | `document_metadata` supports any document type without schema changes                                           |
-| **spring-dotenv**               | `.env` files loaded automatically by Spring Boot — no manual property source config needed                      |
 
 ---
 
@@ -543,7 +539,7 @@ smartdocs-project/
 
 ### Smart Context Strategy for CROSS_DOCUMENT
 
-Currently, the CROSS_DOCUMENT route always sends **full extracted text** to the LLM. This is wasteful for structured documents where metadata is sufficient.
+Currently, the CROSS_DOCUMENT route always sends **full extracted text** to the LLM. 
 
 **Planned optimization:** Use the `DocumentType` enum to decide context strategy per document:
 
@@ -554,8 +550,6 @@ Currently, the CROSS_DOCUMENT route always sends **full extracted text** to the 
 | `SALARY_SLIP`        | **Metadata only** | Salary components are fully captured in metadata                       |
 | `FINANCIAL_BILL`     | **Full text**     | Bills vary wildly — metadata can't capture line items reliably         |
 | `BANK_STATEMENT`     | **Full text**     | Transaction-level detail only exists in full text                      |
-
-This would **reduce token usage by 80%+** for queries like _"Is my name same on Aadhaar and PAN?"_ by sending ~20 fields instead of 2 full pages of text.
 
 ### Other Planned Improvements
 
